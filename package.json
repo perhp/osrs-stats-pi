@@ -1,0 +1,32 @@
+{
+  "name": "perdie",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server/index.tsx",
+  "module": "src/server/index.tsx",
+  "scripts": {
+    "dev": "bun --hot src/server/index.tsx",
+    "start": "NODE_ENV=production bun src/server/index.tsx"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.81.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.525.0",
+    "mime-types": "^3.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router": "^7.6.3",
+    "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/mime-types": "^3.0.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "bun-plugin-tailwind": "^0.0.15",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.11"
+  }
+}
