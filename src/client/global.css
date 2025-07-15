@@ -31,6 +31,6 @@
   }
 
   body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased bg-black;
   }
 }
