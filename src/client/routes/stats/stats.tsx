@@ -64,27 +64,33 @@ export default function Stats() {
 
   return (
     <div className="grid w-full h-screen text-white">
-      <div className="grid grid-cols-3 aspect-[204/275] max-h-screen col-start-1 row-start-1 mx-auto z-10 p-[3vh] gap-[10px] pb-[6vh]">
+      <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-7">
         {skillNames.map((skillName) => (
           <div key={skillName} className="relative">
             <span
               style={{ textShadow: "2px 2px 0 black" }}
-              className="absolute text-[4.5vh] text-yellow-300 right-[7vh] top-[4vh] leading-0"
+              className="absolute text-[30px] text-yellow-300 right-11 top-7 leading-0"
             >
               {stats[skillName].level ?? 1}
             </span>
             <span
               style={{ textShadow: "2px 2px 0 black" }}
-              className="absolute text-[4.5vh] text-yellow-300 right-[1.25vh] bottom-[1.25vh] leading-0"
+              className="absolute text-[30px] text-yellow-300 right-3 bottom-4.5 leading-0"
             >
               99
             </span>
           </div>
         ))}
+        <span
+          style={{ textShadow: "2px 2px 0 black" }}
+          className="absolute text-[30px] text-yellow-300 leading-0 bottom-11 right-16"
+        >
+          {stats["overall"].level ?? 1}
+        </span>
       </div>
       <img
         src={StatsImage}
-        className="object-contain w-full h-full max-h-screen col-start-1 row-start-1"
+        className="object-contain w-full h-full max-h-screen col-start-1 row-start-1 max-w-screen"
       />
     </div>
   );
