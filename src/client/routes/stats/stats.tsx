@@ -77,7 +77,7 @@ export default function Stats() {
               style={{ textShadow: "2px 2px 0 black" }}
               className="absolute text-[30px] text-yellow-300 right-3 bottom-4.5 leading-0"
             >
-              99
+              {stats[skillName].level ?? 1}
             </span>
           </div>
         ))}
