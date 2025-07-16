@@ -1,7 +1,33 @@
-import { Stats } from "@/models/stats.model";
+import { SkillName, Stats } from "@/models/stats.model";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderPinwheel } from "lucide-react";
 import StatsImage from "../../../public/stats.png";
+
+const skillNames: SkillName[] = [
+  "attack",
+  "hitpoints",
+  "mining",
+  "strength",
+  "agility",
+  "smithing",
+  "defence",
+  "herblore",
+  "fishing",
+  "ranged",
+  "thieving",
+  "cooking",
+  "prayer",
+  "crafting",
+  "firemaking",
+  "magic",
+  "fletching",
+  "woodcutting",
+  "runecraft",
+  "slayer",
+  "farming",
+  "construction",
+  "hunter",
+];
 
 function useStats() {
   return useQuery({
@@ -37,11 +63,27 @@ export default function Stats() {
   }
 
   return (
-    <div className="grid w-full h-screen">
-      <div className="aspect-[204/275] max-h-screen col-start-1 row-start-1 mx-auto bg-red-500/25 z-10"></div>
+    <div className="grid w-full h-screen text-white">
+      <div className="grid grid-cols-3 aspect-[204/275] max-h-screen col-start-1 row-start-1 mx-auto z-10 p-[3vh] gap-[10px] pb-[6vh]">
+        {skillNames.map((skillName) => (
+          <div key={skillName} className="relative">
+            <span
+              style={{ textShadow: "2px 2px 0 black" }}
+              className="absolute text-[4.5vh] text-yellow-300 right-[7vh] top-[4vh] leading-0"
+            >
+              {stats[skillName].level ?? 1}
+            </span>
+            <span
+              style={{ textShadow: "2px 2px 0 black" }}
+              className="absolute text-[4.5vh] text-yellow-300 right-[1.25vh] bottom-[1.25vh] leading-0"
+            >
+              99
+            </span>
+          </div>
+        ))}
+      </div>
       <img
         src={StatsImage}
-        alt=""
         className="object-contain w-full h-full max-h-screen col-start-1 row-start-1"
       />
     </div>
