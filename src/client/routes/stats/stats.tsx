@@ -63,19 +63,19 @@ export default function Stats() {
   }
 
   return (
-    <div className="grid w-full h-screen text-white">
+    <div className="grid text-[rgb(253_253_0)] h-[800px] w-[470px]">
       <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-7">
         {skillNames.map((skillName) => (
           <div key={skillName} className="relative">
             <span
               style={{ textShadow: "2px 2px 0 black" }}
-              className="absolute text-[30px] text-yellow-300 right-11 top-7 leading-0"
+              className="absolute text-[30px] right-11 top-7 leading-0"
             >
               {stats[skillName].level ?? 1}
             </span>
             <span
               style={{ textShadow: "2px 2px 0 black" }}
-              className="absolute text-[30px] text-yellow-300 right-3 bottom-4.5 leading-0"
+              className="absolute text-[30px] right-3 bottom-5 leading-0"
             >
               {stats[skillName].level ?? 1}
             </span>
@@ -83,7 +83,7 @@ export default function Stats() {
         ))}
         <span
           style={{ textShadow: "2px 2px 0 black" }}
-          className="absolute text-[30px] text-yellow-300 leading-0 bottom-11 right-16"
+          className="absolute text-[30px] leading-0 bottom-[45px] right-16"
         >
           {stats["overall"].level ?? 1}
         </span>
