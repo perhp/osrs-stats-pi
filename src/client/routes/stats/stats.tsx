@@ -36,7 +36,7 @@ function useStats() {
       const response = await fetch("/api/stats");
       return await response.json();
     },
-    refetchInterval: 30000,
+    refetchInterval: 60000,
     refetchIntervalInBackground: true,
   });
 }
