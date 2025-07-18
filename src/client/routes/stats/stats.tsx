@@ -63,7 +63,7 @@ export default function Stats() {
   }
 
   return (
-    <div className="grid text-[rgb(253_253_0)] h-[800px] w-[470px]">
+    <div className="grid text-[rgb(253_253_0)] h-[800px] w-[475px]">
       <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-7">
         {skillNames.map((skillName) => (
           <div key={skillName} className="relative">
