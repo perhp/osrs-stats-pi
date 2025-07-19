@@ -1,4 +1,5 @@
 import { SkillName, Stats } from "@/models/stats.model";
+import { getLevelInfo } from "@/utils/experience-table";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderPinwheel } from "lucide-react";
 import StatsImage from "../../../public/stats.png";
@@ -64,7 +65,7 @@ export default function Stats() {
 
   return (
     <div className="grid text-[rgb(253_253_0)] h-[800px] w-[475px]">
-      <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-7">
+      <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-[26px]">
         {skillNames.map((skillName) => (
           <div key={skillName} className="relative">
             <span
@@ -79,6 +80,15 @@ export default function Stats() {
             >
               {stats[skillName].level ?? 1}
             </span>
+
+            <div className="absolute -bottom-0.5 h-1 inset-x-2.5 flex">
+              <div
+                className="h-full bg-green-500"
+                style={{
+                  width: `${getLevelInfo(stats[skillName].experience).progress}%`,
+                }}
+              ></div>
+            </div>
           </div>
         ))}
         <span
