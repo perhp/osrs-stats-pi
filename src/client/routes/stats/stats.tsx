@@ -2,6 +2,7 @@ import { SkillName, Stats } from "@/models/stats.model";
 import { getLevelInfo } from "@/utils/experience-table";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderPinwheel } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import StatsImage from "../../../public/stats.png";
 
 const skillNames: SkillName[] = [
@@ -30,24 +31,87 @@ const skillNames: SkillName[] = [
   "hunter",
 ];
 
-function useStats() {
+interface TimeWindowOpts {
+  start: string;
+  end: string;
+  tz?: string;
+  checkMs?: number;
+}
+
+function useDailyTimeWindow({
+  start,
+  end,
+  tz = "Europe/Copenhagen",
+  checkMs = 30_000,
+}: TimeWindowOpts): boolean {
+  const parse = (s: string) => {
+    const [h, m] = s.split(":").map(Number);
+    return { h, m };
+  };
+  const startHM = useMemo(() => parse(start), [start]);
+  const endHM = useMemo(() => parse(end), [end]);
+
+  const compute = () => {
+    const now = new Date();
+    const fmt = new Intl.DateTimeFormat("en-GB", {
+      timeZone: tz,
+      hour12: false,
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const parts = fmt.formatToParts(now);
+    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+    const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+
+    const minsNow = hour * 60 + minute;
+    const minsStart = startHM.h * 60 + startHM.m;
+    const minsEnd = endHM.h * 60 + endHM.m;
+
+    if (minsStart <= minsEnd) {
+      return minsNow >= minsStart && minsNow < minsEnd;
+    } else {
+      return minsNow >= minsStart || minsNow < minsEnd;
+    }
+  };
+
+  const [active, setActive] = useState(compute);
+
+  useEffect(() => {
+    setActive(compute());
+  }, [startHM, endHM, tz]);
+
+  useEffect(() => {
+    const id = setInterval(() => setActive(compute()), checkMs);
+    return () => clearInterval(id);
+  }, [checkMs, startHM, endHM, tz]);
+
+  return active;
+}
+
+function useStats(enabled: boolean) {
   return useQuery({
     queryKey: ["stats"],
     queryFn: async (): Promise<Stats> => {
       const response = await fetch("/api/stats");
       return await response.json();
     },
-    refetchInterval: 60000,
-    refetchIntervalInBackground: true,
+    enabled,
+    refetchInterval: enabled ? 60_000 : false,
+    refetchIntervalInBackground: enabled,
+    staleTime: enabled ? 0 : Infinity,
+    refetchOnWindowFocus: enabled,
+    refetchOnReconnect: enabled,
   });
 }
 
 export default function Stats() {
+  const isActive = useDailyTimeWindow({ start: "07:00", end: "23:00" });
+
   const {
     data: stats,
     isLoading: statsIsLoading,
     isError: statsIsError,
-  } = useStats();
+  } = useStats(isActive);
 
   if (statsIsLoading) {
     return (
