@@ -145,14 +145,16 @@ export default function Stats() {
               {stats[skillName].level ?? 1}
             </span>
 
-            <div className="absolute -bottom-0.5 h-1 inset-x-2.5 flex">
-              <div
-                className="h-full bg-green-500"
-                style={{
-                  width: `${getLevelInfo(stats[skillName].experience).progress}%`,
-                }}
-              ></div>
-            </div>
+            {stats[skillName].level < 99 && (
+              <div className="absolute -bottom-0.5 h-1 inset-x-2.5 flex">
+                <div
+                  className="h-full bg-green-500"
+                  style={{
+                    width: `${getLevelInfo(stats[skillName].experience).progress}%`,
+                  }}
+                ></div>
+              </div>
+            )}
           </div>
         ))}
         <span
