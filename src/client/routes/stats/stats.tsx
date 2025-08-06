@@ -1,11 +1,12 @@
-import { SkillName, Stats } from "@/models/stats.model";
+import { SkillName, Stats as StatsModel } from "@/models/stats.model";
 import { getLevelInfo } from "@/utils/experience-table";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderPinwheel } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+
 import StatsImage from "../../../public/stats.png";
 
-const skillNames: SkillName[] = [
+const SKILL_NAMES = [
   "attack",
   "hitpoints",
   "mining",
@@ -29,11 +30,11 @@ const skillNames: SkillName[] = [
   "farming",
   "construction",
   "hunter",
-];
+] as const satisfies Readonly<SkillName[]>;
 
 interface TimeWindowOpts {
-  start: string;
-  end: string;
+  start: string; // "HH:mm"
+  end: string; // "HH:mm"
   tz?: string;
   checkMs?: number;
 }
@@ -44,12 +45,13 @@ function useDailyTimeWindow({
   tz = "Europe/Copenhagen",
   checkMs = 30_000,
 }: TimeWindowOpts): boolean {
-  const parse = (s: string) => {
+  const parseHM = (s: string) => {
     const [h, m] = s.split(":").map(Number);
     return { h, m };
   };
-  const startHM = useMemo(() => parse(start), [start]);
-  const endHM = useMemo(() => parse(end), [end]);
+
+  const startHM = useMemo(() => parseHM(start), [start]);
+  const endHM = useMemo(() => parseHM(end), [end]);
 
   const compute = () => {
     const now = new Date();
@@ -74,26 +76,29 @@ function useDailyTimeWindow({
     }
   };
 
-  const [active, setActive] = useState(compute);
+  const [active, setActive] = useState<boolean>(compute);
 
   useEffect(() => {
     setActive(compute());
-  }, [startHM, endHM, tz]);
+  }, [startHM.h, startHM.m, endHM.h, endHM.m, tz]);
 
   useEffect(() => {
     const id = setInterval(() => setActive(compute()), checkMs);
     return () => clearInterval(id);
-  }, [checkMs, startHM, endHM, tz]);
+  }, [checkMs, startHM.h, startHM.m, endHM.h, endHM.m, tz]);
 
   return active;
 }
 
 function useStats(enabled: boolean) {
   return useQuery({
-    queryKey: ["stats"],
-    queryFn: async (): Promise<Stats> => {
-      const response = await fetch("/api/stats");
-      return await response.json();
+    queryKey: ["stats", { enabled }],
+    queryFn: async (): Promise<StatsModel> => {
+      const res = await fetch("/api/stats");
+      if (!res.ok) {
+        throw new Error(`Failed to fetch stats: ${res.status}`);
+      }
+      return res.json();
     },
     enabled,
     refetchInterval: enabled ? 60_000 : false,
@@ -104,64 +109,92 @@ function useStats(enabled: boolean) {
   });
 }
 
-export default function Stats() {
+type SkillTileProps = {
+  name: SkillName;
+  level: number;
+  experience: number;
+};
+
+const numberShadow = { textShadow: "2px 2px 0 black" } as const;
+
+const SkillTile = memo(function SkillTile({
+  level,
+  experience,
+}: SkillTileProps) {
+  const progress = level < 99 ? getLevelInfo(experience).progress : 0;
+
+  return (
+    <div className="relative">
+      <span
+        style={numberShadow}
+        className="absolute text-[30px] right-11 top-7 leading-0"
+        aria-label="level"
+      >
+        {level || 1}
+      </span>
+      <span
+        style={numberShadow}
+        className="absolute text-[30px] right-3 bottom-5 leading-0"
+        aria-label="level duplicate"
+      >
+        {level || 1}
+      </span>
+      <div
+        className="absolute inset-x-2.5 -bottom-0.5 flex h-1"
+        aria-label="progress"
+      >
+        <div
+          className="h-full bg-green-400"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+});
+
+export default function StatsPanel() {
   const isActive = useDailyTimeWindow({ start: "07:00", end: "23:00" });
 
-  const {
-    data: stats,
-    isLoading: statsIsLoading,
-    isError: statsIsError,
-  } = useStats(isActive);
+  const { data: stats, isLoading, isError, error } = useStats(isActive);
 
-  if (statsIsLoading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col h-screen bg-black">
-        <div className="grid items-center text-2xl font-bold text-gray-100 place-content-center grow">
-          <LoaderPinwheel className="animate-spin size-14" />
+        <div className="grid items-center text-2xl font-bold text-gray-100 grow place-content-center">
+          <LoaderPinwheel className="size-14 animate-spin" />
         </div>
       </div>
     );
   }
 
-  if (statsIsError || !stats) {
-    return <div>Error</div>;
+  if (isError || !stats) {
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        <p>{error instanceof Error ? error.message : "Error"}</p>
+      </div>
+    );
   }
 
   return (
-    <div className="grid text-[rgb(253_253_0)] h-[800px] w-[475px]">
+    <div className="grid h-[800px] w-[475px] text-[rgb(253_253_0)]">
       <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-[26px]">
-        {skillNames.map((skillName) => (
-          <div key={skillName} className="relative">
-            <span
-              style={{ textShadow: "2px 2px 0 black" }}
-              className="absolute text-[30px] right-11 top-7 leading-0"
-            >
-              {stats[skillName].level ?? 1}
-            </span>
-            <span
-              style={{ textShadow: "2px 2px 0 black" }}
-              className="absolute text-[30px] right-3 bottom-5 leading-0"
-            >
-              {stats[skillName].level ?? 1}
-            </span>
-
-            {stats[skillName].level < 99 && (
-              <div className="absolute -bottom-0.5 h-1 inset-x-2.5 flex">
-                <div
-                  className="h-full bg-green-500"
-                  style={{
-                    width: `${getLevelInfo(stats[skillName].experience).progress}%`,
-                  }}
-                ></div>
-              </div>
-            )}
-          </div>
-        ))}
+        {SKILL_NAMES.map((name) => {
+          const { level = 1, experience = 0 } = stats[name] ?? {};
+          return (
+            <SkillTile
+              key={name}
+              name={name}
+              level={level}
+              experience={experience}
+            />
+          );
+        })}
         <span
-          style={{ textShadow: "2px 2px 0 black" }}
-          className="absolute text-[30px] leading-0 bottom-[45px] right-16"
+          style={numberShadow}
+          className="absolute bottom-[31px] right-16 text-[30px] leading-none"
+          aria-label="overall level"
         >
-          {stats["overall"].level ?? 1}
+          {stats.overall.level ?? 1}
         </span>
       </div>
       <img
