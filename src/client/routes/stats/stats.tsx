@@ -2,7 +2,7 @@ import { SkillName, Stats as StatsModel } from "@/models/stats.model";
 import { getLevelInfo } from "@/utils/experience-table";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderPinwheel } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import StatsImage from "../../../public/stats.png";
 
@@ -52,16 +52,20 @@ function useDailyTimeWindow({
 
   const startHM = useMemo(() => parseHM(start), [start]);
   const endHM = useMemo(() => parseHM(end), [end]);
+  const formatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: tz,
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    [tz],
+  );
 
-  const compute = () => {
+  const compute = useCallback(() => {
     const now = new Date();
-    const fmt = new Intl.DateTimeFormat("en-GB", {
-      timeZone: tz,
-      hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const parts = fmt.formatToParts(now);
+    const parts = formatter.formatToParts(now);
     const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
     const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
 
@@ -71,28 +75,27 @@ function useDailyTimeWindow({
 
     if (minsStart <= minsEnd) {
       return minsNow >= minsStart && minsNow < minsEnd;
-    } else {
-      return minsNow >= minsStart || minsNow < minsEnd;
     }
-  };
+    return minsNow >= minsStart || minsNow < minsEnd;
+  }, [endHM.h, endHM.m, formatter, startHM.h, startHM.m]);
 
-  const [active, setActive] = useState<boolean>(compute);
+  const [active, setActive] = useState<boolean>(() => compute());
 
   useEffect(() => {
     setActive(compute());
-  }, [startHM.h, startHM.m, endHM.h, endHM.m, tz]);
+  }, [compute]);
 
   useEffect(() => {
     const id = setInterval(() => setActive(compute()), checkMs);
     return () => clearInterval(id);
-  }, [checkMs, startHM.h, startHM.m, endHM.h, endHM.m, tz]);
+  }, [checkMs, compute]);
 
   return active;
 }
 
 function useStats(enabled: boolean) {
   return useQuery({
-    queryKey: ["stats", { enabled }],
+    queryKey: ["stats"],
     queryFn: async (): Promise<StatsModel> => {
       const res = await fetch("/api/stats");
       if (!res.ok) {
@@ -110,7 +113,6 @@ function useStats(enabled: boolean) {
 }
 
 type SkillTileProps = {
-  name: SkillName;
   level: number;
   experience: number;
 };
@@ -180,14 +182,7 @@ export default function StatsPanel() {
       <div className="relative grid grid-cols-3 aspect-[204/275] max-h-screen max-w-screen col-start-1 row-start-1 my-auto z-10 p-5 pb-[26px]">
         {SKILL_NAMES.map((name) => {
           const { level = 1, experience = 0 } = stats[name] ?? {};
-          return (
-            <SkillTile
-              key={name}
-              name={name}
-              level={level}
-              experience={experience}
-            />
-          );
+          return <SkillTile key={name} level={level} experience={experience} />;
         })}
         <span
           style={numberShadow}
@@ -199,6 +194,7 @@ export default function StatsPanel() {
       </div>
       <img
         src={StatsImage}
+        alt="OSRS skill panel"
         className="object-contain w-full h-full max-h-screen col-start-1 row-start-1 max-w-screen"
       />
     </div>
